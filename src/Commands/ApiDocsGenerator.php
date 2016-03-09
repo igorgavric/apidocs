@@ -20,7 +20,6 @@ class ApiDocsGenerator {
     protected $routes;
     protected $router;
 
-    protected $packageDir;
     protected $prefix;
     protected $dotPrefix;
     protected $storagePath;
@@ -45,7 +44,6 @@ class ApiDocsGenerator {
         $this->storagePath = storage_path(). '/templates/apidocs';
         $this->router = $router;
         $this->routes = $router->getRoutes();
-        $this->packageDir = __DIR__ . '/../';
     }
 
 
@@ -187,25 +185,25 @@ class ApiDocsGenerator {
         /*
         * Docs Index
         */
-        $this->updatePrefixAndSaveTemplate('docs', $this->packageDir . Config::get('apidocs.index_template_path'));
+        $this->updatePrefixAndSaveTemplate('docs', Config::get('apidocs.index_template_path'));
 
         /*
         * Default Layout
         */
 
-        $this->updatePrefixAndSaveTemplate('layouts', $this->packageDir . Config::get('apidocs.default_layout_template_path'));
+        $this->updatePrefixAndSaveTemplate('layouts', Config::get('apidocs.default_layout_template_path'));
 
         /*
         * Head
         */
 
-        $this->updatePrefixAndSaveTemplate('includes', $this->packageDir . Config::get('apidocs.head_template_path'));
+        $this->updatePrefixAndSaveTemplate('includes', Config::get('apidocs.head_template_path'));
 
         /*
         * Introduction
         */
 
-        $this->updatePrefixAndSaveTemplate('includes', $this->packageDir . Config::get('apidocs.introduction_template_path'));
+        $this->updatePrefixAndSaveTemplate('includes', Config::get('apidocs.introduction_template_path'));
 
         // let's generate the body
         $content = $this->createContentForTemplate($endpoints);
@@ -259,7 +257,7 @@ class ApiDocsGenerator {
 
         $type = 'layouts';
 
-        $path = $this->packageDir . Config::get('apidocs.default_layout_template_path');
+        $path = Config::get('apidocs.default_layout_template_path');
 
         $file = File::get($path);
         $file = str_replace('{prefix}', $this->dotPrefix, $file);
@@ -316,7 +314,7 @@ class ApiDocsGenerator {
         // create assets directory
         File::makeDirectory($destinationPath, $mode = 0777, true, true);
 
-         $targetPath = $this->packageDir . Config::get('apidocs.assets_path');
+         $targetPath = Config::get('apidocs.assets_path');
          $directories = ['css', 'img', 'js'];
 
          foreach ($directories as $directory)
@@ -353,10 +351,10 @@ class ApiDocsGenerator {
             $navSections    = '';
             $navItems       = '';
 
-            $navSections .= File::get($this->packageDir . config::get('apidocs.navigation_template_path'));
+            $navSections .= File::get(config::get('apidocs.navigation_template_path'));
             $navSections = str_replace('{column-title}', $sectionName, $navSections);
 
-            $sectionHead .= File::get($this->packageDir . config::get('apidocs.section_header_template_path'));
+            $sectionHead .= File::get(config::get('apidocs.section_header_template_path'));
             $sectionHead = str_replace('{column-name}', $sectionName, $sectionHead);
             $sectionHead = str_replace('{main-description}', $endpoints[$endpoint_name]['description'], $sectionHead);
 
@@ -369,11 +367,11 @@ class ApiDocsGenerator {
 
                     $uri = explode(' ', $endpoint['uri']);
 
-                    $navItems .= File::get($this->packageDir . config::get('apidocs.nav_items_template_path'));
+                    $navItems .= File::get(config::get('apidocs.nav_items_template_path'));
                     $navItems = str_replace('{column-title}',  $sectionName, $navItems);
                     $navItems = str_replace('{function}', $endpoint['function'], $navItems);
 
-                    $sectionItem .= File::get($this->packageDir . config::get('apidocs.body_content_template_path'));
+                    $sectionItem .= File::get(config::get('apidocs.body_content_template_path'));
                     $sectionItem = str_replace('{column-name}', $sectionName, $sectionItem);
                     $sectionItem = str_replace('{request-type}', $endpoint['method'], $sectionItem);
                     $sectionItem = str_replace('{endpoint-short-description}', $endpoint['docBlock']->getShortDescription(),      $sectionItem);
@@ -404,7 +402,7 @@ class ApiDocsGenerator {
                             $param_name .= '[]';
                         }
 
-                        $parameters .= File::get($this->packageDir . config::get('apidocs.parameters_template_path'));
+                        $parameters .= File::get(config::get('apidocs.parameters_template_path'));
                         $parameters = str_replace('{param-name}', $param_name , $parameters);
                         $parameters = str_replace('{param-type}',  $param->getType(),  $parameters);
                         $parameters = str_replace('{param-desc}',  $param->getDescription(),  $parameters);
@@ -441,7 +439,7 @@ class ApiDocsGenerator {
 
             $navigation .= $navSections;
 
-            $bodySection .= File::get($this->packageDir . config::get('apidocs.compile_content_template_path'));
+            $bodySection .= File::get(config::get('apidocs.compile_content_template_path'));
             $bodySection = str_replace('{section-header}',   $sectionHead, $bodySection);
             $bodySection = str_replace('{section-details}', $sectionItem, $bodySection);
 
@@ -496,6 +494,8 @@ class ApiDocsGenerator {
      * @param  \Illuminate\Routing\Route  $route
      * @return string
      */
+    
+    /*
     protected function getBeforeFilters($route)
     {
         $before = array_keys($route->beforeFilters());
@@ -504,6 +504,7 @@ class ApiDocsGenerator {
 
         return implode(', ', $before);
     }
+    */
 
     /**
      * Get all of the pattern filters matching the route.
@@ -545,8 +546,8 @@ class ApiDocsGenerator {
             'uri'    => $uri,
             'name'   => $route->getName(),
             'action' => $route->getActionName(),
-            'before' => $this->getBeforeFilters($route),
-            'after'  => $this->getAfterFilters($route),
+            // 'before' => $this->getBeforeFilters($route),
+            // 'after'  => $this->getAfterFilters($route),
             'prefix' => $route->getPrefix(),
             'method' => $route->methods()[0],
         ));
@@ -586,10 +587,12 @@ class ApiDocsGenerator {
      * @param  \Illuminate\Routing\Route  $route
      * @return string
      */
+    /*
     protected function getAfterFilters($route)
     {
         return implode(', ', array_keys($route->afterFilters()));
     }
+    */
 
     /**
     * Converts a CamelCase String to Snake Case
